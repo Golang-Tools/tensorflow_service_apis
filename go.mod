@@ -1,4 +1,4 @@
-module Golang-Tools/tensorflow_service_apis
+module github.com/Golang-Tools/tensorflow_service_apis
 
 go 1.15
 

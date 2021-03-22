@@ -22,10 +22,10 @@
 package debug
 
 import (
-	framework "Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/framework"
-	profiler "Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/profiler"
-	protobuf "Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/protobuf"
-	util "Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/util"
+	framework "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/framework"
+	profiler "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/profiler"
+	protobuf "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/protobuf"
+	util "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/util"
 	proto "github.com/golang/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"

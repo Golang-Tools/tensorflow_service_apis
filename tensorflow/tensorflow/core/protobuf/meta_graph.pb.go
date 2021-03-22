@@ -7,7 +7,7 @@
 package protobuf
 
 import (
-	framework "Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/framework"
+	framework "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/framework"
 	proto "github.com/golang/protobuf/proto"
 	any "github.com/golang/protobuf/ptypes/any"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"

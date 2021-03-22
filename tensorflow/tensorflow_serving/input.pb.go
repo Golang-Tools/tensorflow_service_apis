@@ -10,7 +10,7 @@
 package tensorflow_serving
 
 import (
-	example "Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/example"
+	example "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/example"
 	proto "github.com/golang/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -31,7 +31,7 @@ const _ = proto.ProtoPackageIsVersion4
 
 // Specifies one or more fully independent input Examples.
 // See examples at:
-//     https://github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/blob/master/tensorflow/core/example/example.proto
+//     https://github.com/github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/blob/master/tensorflow/core/example/example.proto
 type ExampleList struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

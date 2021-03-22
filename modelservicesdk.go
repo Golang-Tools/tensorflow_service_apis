@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	tfserv "Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow_serving"
+	tfserv "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow_serving"
 
 	log "github.com/Golang-Tools/loggerhelper"
 	"github.com/liyue201/grpc-lb/balancer"

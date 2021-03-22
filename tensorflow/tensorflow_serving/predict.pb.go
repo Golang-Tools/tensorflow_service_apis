@@ -7,7 +7,7 @@
 package tensorflow_serving
 
 import (
-	framework "Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/framework"
+	framework "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/framework"
 	proto "github.com/golang/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"

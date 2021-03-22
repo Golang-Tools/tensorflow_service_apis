@@ -9,7 +9,7 @@
 package util
 
 import (
-	example "Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/example"
+	example "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/example"
 	proto "github.com/golang/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"

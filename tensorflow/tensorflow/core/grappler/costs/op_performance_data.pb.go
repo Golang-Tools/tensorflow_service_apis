@@ -22,8 +22,8 @@
 package costs
 
 import (
-	framework "Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/framework"
-	protobuf "Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/protobuf"
+	framework "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/framework"
+	protobuf "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow/core/protobuf"
 	proto "github.com/golang/protobuf/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
