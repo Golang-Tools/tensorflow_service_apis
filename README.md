@@ -18,4 +18,3 @@ tensorflow_service的grpc客户端接口封装.比较常用的接口如下,下�
         err = ptypes.UnmarshalAny(meta.Metadata["signature_def"], &sd)
     }
     ```
-
