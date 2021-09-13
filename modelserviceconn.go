@@ -1,16 +1,19 @@
 package tensorflow_service_apis
+
 import (
+	"context"
+	"time"
+
 	tfserv "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow_serving"
 	grpc "google.golang.org/grpc"
 )
+
 //ModelServiceConn 客户端类
 type ModelServiceConn struct {
 	tfserv.ModelServiceClient
 	conn *grpc.ClientConn
 	sdk  *SDK
-	once bool
 }
-
 
 //ModelServiceConn 建立一个新的连接
 func (c *SDK) NewModelServiceConn() (*ModelServiceConn, error) {
@@ -29,6 +32,7 @@ func newModelServiceConn(sdk *SDK, addr string, opts ...grpc.DialOption) (*Model
 	}
 	c.conn = conn
 	c.ModelServiceClient = tfserv.NewModelServiceClient(conn)
+	c.sdk = sdk
 	return c, nil
 }
 
@@ -37,3 +41,12 @@ func (c *ModelServiceConn) Close() error {
 	return c.conn.Close()
 }
 
+func (c *ModelServiceConn) NewCtx() (ctx context.Context, cancel context.CancelFunc) {
+	if c.sdk.SDKConfig.Query_Timeout > 0 {
+		timeout := time.Duration(c.sdk.SDKConfig.Query_Timeout) * time.Millisecond
+		ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	} else {
+		ctx, cancel = context.WithCancel(context.Background())
+	}
+	return
+}
