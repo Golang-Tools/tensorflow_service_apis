@@ -18,3 +18,8 @@ tensorflow_service的grpc客户端接口封装.比较常用的接口如下,下�
         err = ptypes.UnmarshalAny(meta.Metadata["signature_def"], &sd)
     }
     ```
+
+## 开发方式
+
+1. 下载指定版本的tensorflow和tfserving,将其中有用的文件夹(tensorflow/core和tensorflow_serving)留下其他都删除.
+2. 执行leave_proto.py文件

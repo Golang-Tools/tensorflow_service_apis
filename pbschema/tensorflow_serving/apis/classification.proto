@@ -1,13 +1,12 @@
 syntax = "proto3";
 
 option cc_enable_arenas = true;
-option go_package = "tensorflow/tensorflow_serving";
 
 import "tensorflow_serving/apis/input.proto";
 import "tensorflow_serving/apis/model.proto";
 
 package tensorflow.serving;
-
+option go_package = "tensorflow_serving/apis";
 // A single class.
 message Class {
   // Label or name of the class.

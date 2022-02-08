@@ -1,26 +1,41 @@
-# v0.0.4
+# 0.1.0
 
 ## 依赖更新
 
-+ `github.com/Golang-Tools/loggerhelper@v0.0.4`
-+ `github.com/golang/protobuf@v1.5.2`
-+ `github.com/json-iterator/go@v1.1.12`
-+ `google.golang.org/grpc@v1.40.0`
-+ `google.golang.org/protobuf@v1.27.1`
++ `tensorflow` ?->2.6.2
++ `tensorflow_serving` ?->2.6.2
++ `grpc` 1.36.0->1.44.0
 
-# v0.0.3
+更新了tensorflow和tensorflow_serving的版本,同时更新了grpc和protobuf的版本
+
+## 新增工具
+
+新增gen_proto.py用于提取tf和tf-serv中的pb并生成对应的go模块
+
+# 0.0.4
+
+## 依赖更新
+
++ github.com/Golang-Tools/loggerhelper@v0.0.4
++ github.com/golang/protobuf@v1.5.2
++ github.com/json-iterator/go@v1.1.12
++ google.golang.org/grpc@v1.40.0
++ google.golang.org/protobuf@v1.27.1
+
+
+# 0.0.3
 
 ## 改进
 
 + 增加对xds负载均衡的支持
 + 优化结构提高可维护性
 
-# v0.0.2
+# 0.0.2
 
 ## 改进
 
 + 增加了对dns的支持,现在dns的请求会做负载均衡
-+ 删除了对zk服务注册服务发现的支持
++ 删除了对zk服务注册服务发现的支持
 + 改进了结构便于扩展
 
 # v0.0.1

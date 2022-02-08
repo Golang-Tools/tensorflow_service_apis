@@ -1,8 +1,7 @@
 syntax = "proto3";
 
 package tensorflow.serving;
-option cc_enable_arenas = true;
-option go_package = "tensorflow/tensorflow_serving";
+option go_package = "tensorflow_serving/config";option cc_enable_arenas = true;
 
 message LogCollectorConfig {
   // Identifies the type of the LogCollector we will use to collect these logs.
