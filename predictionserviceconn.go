@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	tfserv "github.com/Golang-Tools/tensorflow_service_apis/tensorflow_serving"
+	tfserv "github.com/Golang-Tools/tensorflow_service_apis/tensorflow_serving/apis"
 	grpc "google.golang.org/grpc"
 )
 
