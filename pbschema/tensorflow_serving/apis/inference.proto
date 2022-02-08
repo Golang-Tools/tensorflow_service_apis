@@ -11,7 +11,6 @@
 syntax = "proto3";
 
 option cc_enable_arenas = true;
-option go_package = "tensorflow/tensorflow_serving";
 
 import "tensorflow_serving/apis/classification.proto";
 import "tensorflow_serving/apis/input.proto";
@@ -19,7 +18,7 @@ import "tensorflow_serving/apis/model.proto";
 import "tensorflow_serving/apis/regression.proto";
 
 package tensorflow.serving;
-
+option go_package = "tensorflow_serving/apis";
 // Inference request such as classification, regression, etc...
 message InferenceTask {
   // Model Specification. If version is not specified, will use the latest

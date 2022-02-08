@@ -4,12 +4,11 @@
 syntax = "proto3";
 
 option cc_enable_arenas = true;
-option go_package = "tensorflow/tensorflow_serving";
 
 import "tensorflow/core/example/example.proto";
 
 package tensorflow.serving;
-
+option go_package = "tensorflow_serving/apis";
 // Specifies one or more fully independent input Examples.
 // See examples at:
 //     https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/example/example.proto
@@ -27,31 +26,37 @@ message ExampleList {
 // to perform some inference on.
 //
 // context: {
-//   feature: {
-//     key  : "query"
-//     value: {
-//       bytes_list: {
-//         value: [ "pizza" ]
+//   features: {
+//     feature: {
+//       key  : "query"
+//       value: {
+//         bytes_list: {
+//           value: [ "pizza" ]
+//         }
 //       }
 //     }
 //   }
 // }
 // examples: {
-//   feature: {
-//     key  : "cuisine"
-//     value: {
-//       bytes_list: {
-//         value: [ "Pizzeria" ]
+//   features: {
+//     feature: {
+//       key  : "cuisine"
+//       value: {
+//         bytes_list: {
+//           value: [ "Pizzeria" ]
+//         }
 //       }
 //     }
 //   }
 // }
 // examples: {
-//   feature: {
-//     key  : "cuisine"
-//     value: {
-//       bytes_list: {
-//         value: [ "Taqueria" ]
+//   features: {
+//     feature: {
+//       key  : "cuisine"
+//       value: {
+//         bytes_list: {
+//           value: [ "Taqueria" ]
+//         }
 //       }
 //     }
 //   }
