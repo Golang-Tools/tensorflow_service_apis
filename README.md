@@ -72,3 +72,13 @@ func main(){
 1. 下载指定版本的tensorflow和tfserving,将其中有用的文件夹(tensorflow/core和tensorflow_serving)留下其他都删除.
 2. 执行leave_proto.py文件
 3. 使用搜索工具,查找.go文件中的`"tensorflow`,找到import中的内容,前面加上`github.com/Golang-Tools/tensorflow_service_apis/`
+4. 在`tensorflow`和`tensorflow_serving`两个文件夹下分别添加一个同名`.go`文件,在其中添加同名`package`声明
+
+    ```go
+    package tensorflow|tensorflow_serving
+    ```
+
+一般情况下我们只需要修改项目根目录下的4个文件
+
++ `tensorflow_service_apis.go`,sdk对象的声明,包括各种设置项的处理等
++ `modelserviceconn.go`,`predictionserviceconn.go`和`sessionserviceconn.go`,不同service的连接对象声明

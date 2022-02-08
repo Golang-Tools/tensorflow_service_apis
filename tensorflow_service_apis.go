@@ -28,10 +28,9 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 //SDKConfig 的客户端类型
 type SDKConfig struct {
-	Address      []string `json:"address" jsonschema:"description=连接服务的主机和端口"`
-	Service_Name string   `json:"service_name,omitempty" jsonschema:"description=服务器域名"`
-	App_Name     string   `json:"app_name,omitempty" jsonschema:"description=服务名"`
-	App_Version  string   `json:"app_version,omitempty" jsonschema:"description=服务版本"`
+	Query_Addresses       []string `json:"query_addresses" jsonschema:"required,description=连接服务的主机地址"`
+	Requester_App_Name    string   `json:"requester_app_name,omitempty" jsonschema:"description=请求方服务名"`
+	Requester_App_Version string   `json:"requester_app_version,omitempty" jsonschema:"description=请求方服务版本"`
 
 	// 性能设置
 	Initial_Window_Size                         int  `json:"initial_window_size,omitempty" jsonschema:"description=基于Stream的滑动窗口大小"`
@@ -137,17 +136,17 @@ func (c *SDK) initPerformanceOpts() {
 //Init 初始化sdk客户端的连接信息
 func (c *SDK) Init(conf *SDKConfig) error {
 	c.SDKConfig = conf
-	if conf.Address == nil {
+	if conf.Query_Addresses == nil {
 		return errors.New("必须至少有一个地址")
 	}
-	switch len(conf.Address) {
+	switch len(conf.Query_Addresses) {
 	case 0:
 		{
 			return errors.New("必须至少有一个地址")
 		}
 	case 1:
 		{
-			c.addr = c.Address[0]
+			c.addr = c.Query_Addresses[0]
 			if strings.HasPrefix(c.addr, "dns:///") {
 				err := c.initWithDNSLB()
 				if err != nil {
@@ -253,12 +252,13 @@ func (c *SDK) initWithXDSLB() error {
 
 //InitWithLocalBalance 初始化本地负载均衡的连接配置
 func (c *SDK) initWithLocalBalance() error {
+	//注意此处使用客户端信息作为本地负载均衡的域名(hostname)
 	serverName := ""
-	if c.App_Name != "" {
-		if c.App_Version != "" {
-			serverName = fmt.Sprintf("%s-%s", c.App_Name, strings.ReplaceAll(c.App_Version, ".", "_"))
+	if c.Requester_App_Name != "" {
+		if c.Requester_App_Version != "" {
+			serverName = fmt.Sprintf("%s-%s", c.Requester_App_Name, strings.ReplaceAll(c.Requester_App_Version, ".", "_"))
 		} else {
-			serverName = c.App_Name
+			serverName = c.Requester_App_Name
 		}
 	}
 	c.serviceconfig["loadBalancingPolicy"] = "round_robin"
@@ -266,7 +266,7 @@ func (c *SDK) initWithLocalBalance() error {
 
 	r := manual.NewBuilderWithScheme("localbalancer")
 	addresses := []resolver.Address{}
-	for _, addr := range c.Address {
+	for _, addr := range c.Query_Addresses {
 		addresses = append(addresses, resolver.Address{Addr: addr})
 	}
 	r.InitialState(resolver.State{

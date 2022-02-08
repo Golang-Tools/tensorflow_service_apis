@@ -20,6 +20,7 @@
 
 1. 将`NewCtx`改到`SDK`上,并且添加了可配置参数(具体见`ctxopt.go`文件)
 2. 增加了`Get{Session|Model|Prediction}ServiceConn`方法,用于获取或创建对应的连接,现在的sdk会保留连接
+3. `SDKConfig`中对请求路径和自身信息的配置项字段产生了变动,使语义更加明确了
 
 # 0.0.4
 
