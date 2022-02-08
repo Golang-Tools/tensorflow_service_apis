@@ -1,7 +1,6 @@
 package tensorflow_service_apis
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -14,6 +13,8 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+	xdscreds "google.golang.org/grpc/credentials/xds"
 	"google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/keepalive"
 	resolver "google.golang.org/grpc/resolver"
@@ -48,6 +49,9 @@ type SDKConfig struct {
 	Client_Cert_Path string `json:"client_cert_path,omitempty" jsonschema:"description=客户端整数位置"`
 	Client_Key_Path  string `json:"client_key_path,omitempty" jsonschema:"description=客户端证书对应的私钥位置"`
 
+	// XDS设置
+	XDS_CREDS bool `json:"xds_creds,omitempty" jsonschema:"description=当address的schema是xds时是否使用xds的令牌加密访问"`
+
 	// 请求超时设置
 	Query_Timeout int `json:"query_timeout,omitempty" jsonschema:"description=请求服务的最大超时时间单位ms"`
 }
@@ -63,6 +67,7 @@ func (c *SDKConfig) NewSDK() *SDK {
 type SDK struct {
 	*SDKConfig
 	opts          []grpc.DialOption
+	callopts      []grpc.CallOption
 	serviceconfig map[string]interface{}
 	addr          string
 }
@@ -70,33 +75,116 @@ type SDK struct {
 //New 创建客户端对象
 func New() *SDK {
 	c := new(SDK)
-	c.opts = make([]grpc.DialOption, 0, 10)
+	c.opts = []grpc.DialOption{}
+	c.callopts = []grpc.CallOption{}
+	c.serviceconfig = map[string]interface{}{}
 	return c
 }
 
-//InitCallOpts 初始化连接选项
-func (c *SDK) InitCallOpts() {
-	callopts := []grpc.CallOption{}
+//initMsgSize 初始化消息大小设置
+func (c *SDK) initMsgSize() {
 	if c.Max_Recv_Msg_Size != 0 {
-		callopts = append(callopts, grpc.MaxCallRecvMsgSize(c.Max_Recv_Msg_Size))
+		c.callopts = append(c.callopts, grpc.MaxCallRecvMsgSize(c.Max_Recv_Msg_Size))
 	}
 	if c.Max_Send_Msg_Size != 0 {
-		callopts = append(callopts, grpc.MaxCallSendMsgSize(c.Max_Send_Msg_Size))
+		c.callopts = append(c.callopts, grpc.MaxCallSendMsgSize(c.Max_Send_Msg_Size))
 	}
+
+}
+
+//initCompression 初始化压缩设置
+func (c *SDK) initCompression() {
 	switch c.Compression {
 	case "gzip":
 		{
-			callopts = append(callopts, grpc.UseCompressor(gzip.Name))
+			c.callopts = append(c.callopts, grpc.UseCompressor(gzip.Name))
 		}
-	}
-
-	if len(callopts) > 0 {
-		c.opts = append(c.opts, grpc.WithDefaultCallOptions(callopts...))
 	}
 }
 
-//InitOpts 初始化连接选项
-func (c *SDK) InitOpts() error {
+//initKeepalive 初始化keepalive的相关设置
+func (c *SDK) initKeepalive() {
+	if c.Keepalive_Time != 0 || c.Keepalive_Timeout != 0 || c.Keepalive_Enforcement_Permit_Without_Stream {
+		kacp := keepalive.ClientParameters{
+			Time:                time.Duration(c.Keepalive_Time) * time.Second,
+			Timeout:             time.Duration(c.Keepalive_Timeout) * time.Second,
+			PermitWithoutStream: c.Keepalive_Enforcement_Permit_Without_Stream, // send pings even without active streams
+		}
+		c.opts = append(c.opts, grpc.WithKeepaliveParams(kacp))
+	}
+}
+
+//initPerformanceOpts 初始化连接的性能选项
+func (c *SDK) initPerformanceOpts() {
+	if c.Conn_With_Block {
+		c.opts = append(c.opts, grpc.WithBlock())
+	}
+	if c.Initial_Window_Size != 0 {
+		c.opts = append(c.opts, grpc.WithInitialWindowSize(int32(c.Initial_Window_Size)))
+	}
+	if c.Initial_Conn_Window_Size != 0 {
+		c.opts = append(c.opts, grpc.WithInitialConnWindowSize(int32(c.Initial_Conn_Window_Size)))
+	}
+}
+
+//Init 初始化sdk客户端的连接信息
+func (c *SDK) Init(conf *SDKConfig) error {
+	c.SDKConfig = conf
+	if conf.Address == nil {
+		return errors.New("必须至少有一个地址")
+	}
+	switch len(conf.Address) {
+	case 0:
+		{
+			return errors.New("必须至少有一个地址")
+		}
+	case 1:
+		{
+			c.addr = c.Address[0]
+			if strings.HasPrefix(c.addr, "dns:///") {
+				err := c.initWithDNSLB()
+				if err != nil {
+					return err
+				}
+			} else if strings.HasPrefix(c.addr, "xds:///") {
+				err := c.initWithXDSLB()
+				if err != nil {
+					return err
+				}
+			} else {
+				err := c.initWithoutBL()
+				if err != nil {
+					return err
+				}
+			}
+		}
+	default:
+		{
+			err := c.initWithLocalBalance()
+			if err != nil {
+				return err
+			}
+		}
+	}
+	c.initMsgSize()
+	c.initCompression()
+	c.initKeepalive()
+	c.initPerformanceOpts()
+	if len(c.serviceconfig) != 0 {
+		serviceconfig, err := json.MarshalToString(c.serviceconfig)
+		if err != nil {
+			return err
+		}
+		c.opts = append(c.opts, grpc.WithDefaultServiceConfig(serviceconfig))
+	}
+	if len(c.callopts) != 0 {
+		c.opts = append(c.opts, grpc.WithDefaultCallOptions(c.callopts...))
+	}
+	return nil
+}
+
+// initTLS 初始化TLS设置
+func (c *SDK) initTLS() error {
 	if c.Ca_Cert_Path != "" {
 		if c.Client_Cert_Path != "" && c.Client_Key_Path != "" {
 			cert, err := tls.LoadX509KeyPair(c.Client_Cert_Path, c.Client_Key_Path)
@@ -128,74 +216,31 @@ func (c *SDK) InitOpts() error {
 	} else {
 		c.opts = append(c.opts, grpc.WithInsecure())
 	}
-	if c.Keepalive_Time != 0 || c.Keepalive_Timeout != 0 || c.Keepalive_Enforcement_Permit_Without_Stream == true {
-		kacp := keepalive.ClientParameters{
-			Time:                time.Duration(c.Keepalive_Time) * time.Second,
-			Timeout:             time.Duration(c.Keepalive_Timeout) * time.Second,
-			PermitWithoutStream: c.Keepalive_Enforcement_Permit_Without_Stream, // send pings even without active streams
-		}
-		c.opts = append(c.opts, grpc.WithKeepaliveParams(kacp))
-	}
-	if c.Conn_With_Block == true {
-		c.opts = append(c.opts, grpc.WithBlock())
-	}
-	if c.Initial_Window_Size != 0 {
-		c.opts = append(c.opts, grpc.WithInitialWindowSize(int32(c.Initial_Window_Size)))
-	}
-	if c.Initial_Conn_Window_Size != 0 {
-		c.opts = append(c.opts, grpc.WithInitialConnWindowSize(int32(c.Initial_Conn_Window_Size)))
-	}
 	return nil
 }
 
+//initWithoutBL 初始化没有堵在均衡设置的服务
+func (c *SDK) initWithoutBL() error {
+	return c.initTLS()
+}
 
-//Init 初始化sdk客户端的连接信息
-func (c *SDK) Init(conf *SDKConfig) error {
-	c.SDKConfig = conf
-	if conf.Address == nil {
-		return errors.New("必须至少有一个地址")
+//initWithDNSLB 初始化使用外部dns做负载均衡的设置
+func (c *SDK) initWithDNSLB() error {
+	c.serviceconfig["loadBalancingPolicy"] = "round_robin"
+	return c.initTLS()
+}
+
+//InitWithStandalone 初始化使用XDS协议做负载均衡的设置
+func (c *SDK) initWithXDSLB() error {
+	creds := insecure.NewCredentials()
+	var err error
+	if c.XDS_CREDS {
+		creds, err = xdscreds.NewClientCredentials(xdscreds.ClientOptions{FallbackCreds: insecure.NewCredentials()})
 	}
-	switch len(conf.Address) {
-	case 0:
-		{
-			return errors.New("必须至少有一个地址")
-		}
-	case 1:
-		{
-			c.initStandalone()
-		}
-	default:
-		{
-			c.initWithLocalBalance()
-		}
-	}
-	err := c.InitOpts()
 	if err != nil {
 		return err
 	}
-	c.InitCallOpts()
-	if c.serviceconfig != nil {
-		serviceconfig, err := json.MarshalToString(c.serviceconfig)
-		if err != nil {
-			return err
-		}
-		c.opts = append(c.opts, grpc.WithDefaultServiceConfig(serviceconfig))
-	}
-	return nil
-}
-
-//InitStandalone 初始化单机服务的连接配置
-func (c *SDK) initStandalone() error {
-	c.addr = c.Address[0]
-	if strings.HasPrefix(c.addr, "dns:///") {
-		if c.serviceconfig == nil {
-			c.serviceconfig = map[string]interface{}{
-				"loadBalancingPolicy": "round_robin",
-			}
-		} else {
-			c.serviceconfig["loadBalancingPolicy"] = "round_robin"
-		}
-	}
+	c.opts = append(c.opts, grpc.WithTransportCredentials(creds))
 	return nil
 }
 
@@ -208,17 +253,10 @@ func (c *SDK) initWithLocalBalance() error {
 		} else {
 			serverName = c.App_Name
 		}
+	}
+	c.serviceconfig["loadBalancingPolicy"] = "round_robin"
+	c.serviceconfig["healthCheckConfig"] = map[string]string{"serviceName": serverName}
 
-	}
-	if c.serviceconfig == nil {
-		c.serviceconfig = map[string]interface{}{
-			"loadBalancingPolicy": "round_robin",
-			"healthCheckConfig":   map[string]string{"serviceName": c.Service_Name},
-		}
-	} else {
-		c.serviceconfig["loadBalancingPolicy"] = "round_robin"
-		c.serviceconfig["healthCheckConfig"] = map[string]string{"serviceName": serverName}
-	}
 	r := manual.NewBuilderWithScheme("localbalancer")
 	addresses := []resolver.Address{}
 	for _, addr := range c.Address {
@@ -229,18 +267,7 @@ func (c *SDK) initWithLocalBalance() error {
 	})
 	c.addr = fmt.Sprintf("%s:///%s", r.Scheme(), serverName)
 	c.opts = append(c.opts, grpc.WithResolvers(r))
-	return nil
-}
-
-
-func (c *SDK) NewCtx() (ctx context.Context, cancel context.CancelFunc) {
-	if c.SDKConfig.Query_Timeout > 0 {
-		timeout := time.Duration(c.SDKConfig.Query_Timeout) * time.Millisecond
-		ctx, cancel = context.WithTimeout(context.Background(), timeout)
-	} else {
-		ctx, cancel = context.WithCancel(context.Background())
-	}
-	return
+	return c.initTLS()
 }
 
 //DefaultSDK 默认的sdk客户端
