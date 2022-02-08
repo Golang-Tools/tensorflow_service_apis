@@ -4,13 +4,22 @@
 
 + `tensorflow` ?->2.6.2
 + `tensorflow_serving` ?->2.6.2
-+ `grpc` 1.36.0->1.44.0
++ `grpc` 1.36.0->1.44.0,同步改用`grpc.WithTransportCredentials(insecure.NewCredentials())`替换了`grpc.WithInsecure()`
 
 更新了tensorflow和tensorflow_serving的版本,同时更新了grpc和protobuf的版本
 
 ## 新增工具
 
 新增gen_proto.py用于提取tf和tf-serv中的pb并生成对应的go模块
+
+## 新增接口
+
+1. 增加了对`SessionServiceClient`的支持
+
+## 接口变动
+
+1. 将`NewCtx`改到`SDK`上,并且添加了可配置参数(具体见`ctxopt.go`文件)
+2. 增加了`Get{Session|Model|Prediction}ServiceConn`方法,用于获取或创建对应的连接,现在的sdk会保留连接
 
 # 0.0.4
 
@@ -21,7 +30,6 @@
 + github.com/json-iterator/go@v1.1.12
 + google.golang.org/grpc@v1.40.0
 + google.golang.org/protobuf@v1.27.1
-
 
 # 0.0.3
 

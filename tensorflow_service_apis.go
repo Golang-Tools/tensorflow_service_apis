@@ -1,12 +1,14 @@
 package tensorflow_service_apis
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"sync"
 	"time"
 
 	log "github.com/Golang-Tools/loggerhelper"
@@ -66,10 +68,14 @@ func (c *SDKConfig) NewSDK() *SDK {
 //SDK 的客户端类型
 type SDK struct {
 	*SDKConfig
-	opts          []grpc.DialOption
-	callopts      []grpc.CallOption
-	serviceconfig map[string]interface{}
-	addr          string
+	opts                  []grpc.DialOption
+	callopts              []grpc.CallOption
+	serviceconfig         map[string]interface{}
+	addr                  string
+	modelServiceConn      *ModelServiceConn
+	predictionServiceConn *PredictionServiceConn
+	sessionServiceConn    *SessionServiceConn
+	getConnLock           *sync.RWMutex
 }
 
 //New 创建客户端对象
@@ -78,6 +84,7 @@ func New() *SDK {
 	c.opts = []grpc.DialOption{}
 	c.callopts = []grpc.CallOption{}
 	c.serviceconfig = map[string]interface{}{}
+	c.getConnLock = &sync.RWMutex{}
 	return c
 }
 
@@ -214,7 +221,7 @@ func (c *SDK) initTLS() error {
 			c.opts = append(c.opts, grpc.WithTransportCredentials(creds))
 		}
 	} else {
-		c.opts = append(c.opts, grpc.WithInsecure())
+		c.opts = append(c.opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 	return nil
 }
@@ -268,6 +275,28 @@ func (c *SDK) initWithLocalBalance() error {
 	c.addr = fmt.Sprintf("%s:///%s", r.Scheme(), serverName)
 	c.opts = append(c.opts, grpc.WithResolvers(r))
 	return c.initTLS()
+}
+
+//NewCtx 创建请求的上下文
+func (c *SDK) NewCtx(opts ...CtxOption) (ctx context.Context, cancel context.CancelFunc) {
+	dopt := CtxOptions{}
+	if len(opts) > 0 {
+		for _, opt := range opts {
+			opt.Apply(&dopt)
+		}
+	}
+	if dopt.UntilEnd || c.SDKConfig.Query_Timeout <= 0 {
+		ctx, cancel = context.WithCancel(context.Background())
+	} else {
+		var timeout time.Duration
+		if dopt.Timeout > 0 {
+			timeout = dopt.Timeout
+		} else {
+			timeout = time.Duration(c.SDKConfig.Query_Timeout) * time.Millisecond
+		}
+		ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	}
+	return
 }
 
 //DefaultSDK 默认的sdk客户端
