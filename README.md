@@ -10,7 +10,7 @@ tensorflow_service的grpc客户端接口封装.比较常用的接口如下,下�
     ```golang
     import (
         "github.com/golang/protobuf/ptypes"
-        apispb "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/tensorflow_serving"
+        apispb "github.com/Golang-Tools/tensorflow_service_apis/tensorflow_serving"
     )
 
     func main(){
