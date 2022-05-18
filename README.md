@@ -1,6 +1,8 @@
-# tensorflow_service_apis
+# tensorflow_service_apis/v2
 
 tensorflow_service的grpc客户端接口封装.
+
+v2版本将只支持go 1.18+ 低版本的请使用v0版本
 
 ## 使用方法
 

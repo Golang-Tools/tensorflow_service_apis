@@ -12,7 +12,7 @@ import (
 	anypb "google.golang.org/protobuf/types/known/anypb"
 	reflect "reflect"
 	sync "sync"
-	protobuf "github.com/Golang-Tools/tensorflow_service_apis/tensorflow/core/protobuf"
+	protobuf "github.com/Golang-Tools/tensorflow_service_apis/v2/tensorflow/core/protobuf"
 )
 
 const (
