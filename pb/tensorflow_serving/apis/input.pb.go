@@ -14,7 +14,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
-	example "github.com/Golang-Tools/tensorflow_service_apis/v2/tensorflow/core/example"
+	example "github.com/Golang-Tools/tensorflow_service_apis/v2/pb/tensorflow/core/example"
 )
 
 const (
