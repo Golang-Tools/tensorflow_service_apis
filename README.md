@@ -81,8 +81,8 @@ func main(){
 ## 开发方式
 
 1. 下载指定版本的tensorflow和tfserving,将其中有用的文件夹(tensorflow/core和tensorflow_serving)留下其他都删除.
-2. 执行leave_proto.py文件
-3. 使用搜索工具,查找.go文件中的`"tensorflow`,找到import中的内容,前面加上`github.com/Golang-Tools/tensorflow_service_apis/`
+2. 执行gen_proto.py文件
+3. 使用搜索工具,查找.go文件中的`"tensorflow`,找到import中的内容,前面加上`github.com/Golang-Tools/tensorflow_service_apis/v2`
 4. 在`tensorflow`和`tensorflow_serving`两个文件夹下分别添加一个同名`.go`文件,在其中添加同名`package`声明
 
     ```go
