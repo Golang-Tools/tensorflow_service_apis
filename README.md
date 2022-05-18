@@ -2,18 +2,22 @@
 
 tensorflow_service的grpc客户端接口封装.
 
-v2版本将只支持go 1.18+ 低版本的请使用v0版本
+v2版本将只支持go 1.18+ 低版本的请使用v0版本.
+
+
 
 ## 使用方法
 
-1. 创建并初始化SDK对象,有3种方式
-   1. 可以使用`tensorflow_service_apis.New()`方式,然后调用sdk对象的Init方法传入参数`tensorflow_service_apis.SDKConfig`对象初始化
-   2. 构造一个`tensorflow_service_apis.SDKConfig`对象,调用其`NewSDK()`方法创建一个初始化化好的`SDK`对象
-   3. 直接使用默认`SDK`对象`tensorflow_service_apis.DefaultSDK`,调用sdk对象的Init方法传入参数`tensorflow_service_apis.SDKConfig`对象初始化
-2. 调用SDK对象的`Get{Session|Model|Prediction}ServiceConn`方法获取对应的连接
-3. 调用SDK对象的`NewCtx`方法获取请求时用的ctx对象
-4. 构造指定方法的请求体
-5. 请求指定方法并获得结果
+本项目基于[github.com/Golang-Tools/grpcsdk](https://github.com/Golang-Tools/grpcsdk).因此使用方法和`grpcsdk`构造的sdk完全一致.
+
+本项目只是提供了
+
+1. `pb`模块,`tenserflow`和`tensorflow_serving`的protobuf文件生成的go模块
+
+2. 3个默认的sdk对象
+    + `DefaultPredictionSDK`对应`PredictionService`
+    + `DefaultModelServiceSDK`对应`ModelService`
+    + `DefaultSessionServiceSDK`对应`SessionService`
 
 ## 例子
 
@@ -22,25 +26,30 @@ v2版本将只支持go 1.18+ 低版本的请使用v0版本
 ```go
 import (
     tfsapis "github.com/Golang-Tools/tensorflow_service_apis"
+    apipb "github.com/Golang-Tools/tensorflow_service_apis/pb/tensorflow_serving/apis"
     "google.golang.org/protobuf/types/known/wrapperspb"
-    log "github.com/Golang-Tools/loggerhelper"
+    "github.com/Golang-Tools/grpcsdk"
 )
 
 func main(){
-    tfsapis.DefaultSDK.Init(&tensorflow_service_apis.SDKConfig{
-        //你的配置
-    })
-    conn,err := tfsapis.DefaultSDK.GetModelServiceConn()
-    if err != nil{
-        panic(err)
+    err := tfsapis.DefaultSDK.Init(grpcsdk.WithQueryAddresses("localhost:5000"))
+    if err != nil {
+        tfsapis.DefaultSDK.Logger.Error("sdk.Init get error", log.Dict{"err": err.Error()})
     }
+    defer tfsapis.DefaultSDK.Close()
+    tfsapis.DefaultSDK.Logger.Info("setup sdk init ok")
+    Conn, release := tfsapis.DefaultSDK.GetClient()
+    defer release()
+    tfsapis.DefaultSDK.Logger.Info("setup sdk GetClient ok")
+    tfsapis.DefaultSDK.Logger.Info("setup ok")
     // 获取模型元信息
-    ctx,cancel := tfsapis.DefaultSDK.NewCtx()
+    ctx, cancel := tfsapis.DefaultSDK.NewCtx()
     defer cancel()
-    res, err := conn.GetModelStatus(ctx, &tfsapis.GetModelStatusRequest{
-        ModelSpec:&tfsapis.ModelSpec{
+    // 获取模型元信息
+    res, err := conn.GetModelStatus(ctx, &apipb.GetModelStatusRequest{
+        ModelSpec:&apipb.ModelSpec{
             Name:          {modelName},//模型名
-            VersionChoice: &tfsapis.ModelSpec_Version{Version: wrapperspb.Int64({version})},//指定版本号
+            VersionChoice: &apipb.ModelSpec_Version{Version: wrapperspb.Int64({version})},//指定版本号
         },
     })
     if err != nil{
