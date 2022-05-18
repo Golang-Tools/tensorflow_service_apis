@@ -1,3 +1,11 @@
+# v2.0.2
+
+## 实现优化
+
++ 更新`github.com/Golang-Tools/grpcsdk`至v0.0.2
++ 更新`google.golang.org/grpc`至v1.46.2
++ 更新`google.golang.org/protobuf`至v1.28.0
+
 # v2.0.1
 
 现在本项目基于[github.com/Golang-Tools/grpcsdk](https://github.com/Golang-Tools/grpcsdk).因此使用方法和`grpcsdk`构造的sdk完全一致.
